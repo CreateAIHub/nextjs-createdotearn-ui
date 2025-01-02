@@ -231,7 +231,7 @@ export function Sidebar({
             <span className="text-sm font-medium text-muted-foreground">Follow us on Twitter</span>
           </a>
           <a
-              href="https://t.me/createai_xyz"
+              href="https://t.me/CR8AI"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:opacity-80"
