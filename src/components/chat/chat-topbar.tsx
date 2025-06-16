@@ -94,13 +94,10 @@ export default function ChatTopbar({
           </SheetContent>
         </Sheet>
         <div className="ml-auto flex items-center space-x-4">
-          <img
-              src="/createai.png"
-              alt="Top Right Image"
-              className="w-45 h-20 object-cover rounded"
-          />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+            Telegram-Bitte
+          </h1>
         </div>
       </div>
-
   );
 }

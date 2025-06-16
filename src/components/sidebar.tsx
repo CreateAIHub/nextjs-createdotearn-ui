@@ -116,22 +116,21 @@ export function Sidebar({
   return (
       <div
           data-collapsed={isCollapsed}
-          className="relative justify-between group lg:bg-accent/20 lg:dark:bg-card/35 flex flex-col h-full gap-4 p-2 data-[collapsed=true]:p-2 "
+          className="relative justify-between group lg:bg-accent/20 lg:dark:bg-card/35 flex flex-col h-full gap-4 p-2 data-[collapsed=true]:p-2"
       >
-        <div className=" flex flex-col justify-between p-2 max-h-fit overflow-y-auto">
+        <div className="flex flex-col justify-between p-2 max-h-fit overflow-y-auto">
           <Button
               onClick={() => {
                 router.push("/");
-                // Clear messages
                 setMessages([]);
                 if (closeSidebar) {
                   closeSidebar();
                 }
               }}
               variant="ghost"
-              className="flex justify-between w-full h-14 text-sm xl:text-lg font-normal items-center "
+              className="flex justify-between w-full h-14 text-sm xl:text-lg font-normal items-center"
           >
-            <div className="flex gap-3 items-center ">
+            <div className="flex gap-3 items-center">
               New chat
             </div>
             <SquarePen size={18} className="shrink-0 w-4 h-4"/>
@@ -140,7 +139,7 @@ export function Sidebar({
           <div className="flex flex-col pt-10 gap-2">
             <p className="pl-4 text-xs text-muted-foreground">Your chats</p>
             {localChats.length > 0 && (
-                <div>
+                <div className="space-y-1">
                   {localChats.map(({chatId, messages}, index) => (
                       <Link
                           key={index}
@@ -152,27 +151,27 @@ export function Sidebar({
                                 [buttonVariants({variant: "ghost"})]:
                                 chatId.substring(5) !== selectedChatId,
                               },
-                              "flex justify-between w-full h-14 text-base font-normal items-center "
+                              "flex justify-between w-full h-14 text-base font-normal items-center group/item"
                           )}
                       >
-                        <div className="flex gap-3 items-center truncate">
-                          <div className="flex flex-col">
-                      <span className="text-xs font-normal ">
-                        {messages.length > 0 ? messages[0].content : ""}
-                      </span>
+                        <div className="flex gap-3 items-center min-w-0 flex-1 pr-2">
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-xs font-normal truncate max-w-full">
+                              {messages.length > 0 ? messages[0].content : "Empty chat"}
+                            </span>
                           </div>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"
-                                className="flex justify-end items-center"
+                                className="flex justify-end items-center opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                             >
                               <MoreHorizontal size={15} className="shrink-0"/>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className=" ">
+                          <DropdownMenuContent className="">
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button
@@ -213,37 +212,36 @@ export function Sidebar({
           </div>
         </div>
 
-
         <div className="justify-end flex flex-col items-center px-2 py-4 gap-2">
           <a
               href="https://x.com/createai_xyz"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:opacity-80"
+              className="flex items-center gap-2 hover:opacity-80 min-w-0"
           >
             <Image
-                src="/twitter.png" // Path to your Twitter logo
+                src="/twitter.png"
                 alt="Twitter Logo"
                 width={24}
                 height={24}
                 className="shrink-0"
             />
-            <span className="text-sm font-medium text-muted-foreground">Follow us on Twitter</span>
+            <span className="text-sm font-medium text-muted-foreground truncate">Follow us on Twitter</span>
           </a>
           <a
               href="https://t.me/CR8AI"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:opacity-80"
+              className="flex items-center gap-2 hover:opacity-80 min-w-0"
           >
             <Image
-                src="/telegram.png" // Path to your Telegram logo
+                src="/telegram.png"
                 alt="Telegram Logo"
                 width={24}
                 height={24}
                 className="shrink-0"
             />
-            <span className="text-sm font-medium text-muted-foreground">Join us on Telegram</span>
+            <span className="text-sm font-medium text-muted-foreground truncate">Join us on Telegram</span>
           </a>
           <UserSettings/>
         </div>

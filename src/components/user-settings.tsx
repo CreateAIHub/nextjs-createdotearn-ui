@@ -109,8 +109,6 @@ export default function UserSettings() {
             </DialogHeader>
           </DialogContent>
         </Dialog>
-        <Dialog>
-        </Dialog>
       </DropdownMenuContent>
     </DropdownMenu>
   );
