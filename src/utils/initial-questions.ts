@@ -1,44 +1,44 @@
-export const INITIAL_QUESTIONS = [
+export const initialQuestions = [
   {
-    content: "Can you transfer 2 ADA to this wallet address?",
+    content: "Can you help me stake NEAR tokens?",
   },
   {
-    content: "Can you trade 2 ADA for USDC on Cardano DEX?",
+    content: "How do I use Chain Signatures for Bitcoin transactions?",
   },
   {
-    content: "Can you stake 30 ADA from my wallet?",
+    content: "Can you create a cross-chain swap using NEAR Intents?",
   },
   {
-    content: "Can you show me my current Cardano wallet balance?",
+    content: "What DeFi protocols are available on NEAR?",
   },
   {
-    content: "How can I bridge my assets to Masumi network?",
+    content: "How can I bridge assets to NEAR Protocol?",
   },
   {
-    content: "How can I stake ADA to start earning rewards?",
+    content: "Can you explain how Shade Agents work?",
   },
   {
-    content: "How do I convert ADA into fiat currencies like Lira, Dollars, or Euros?",
+    content: "How do I participate in NEAR governance?",
   },
   {
-    content: "What is Midnight network and how does it work?",
+    content: "What are the benefits of NEAR's sharding technology?",
   },
   {
-    content: "How can I interact with Masumi network protocols?",
+    content: "How can I interact with NEAR smart contracts?",
   },
   {
-    content: "What are the benefits of using Cardano's smart contracts?",
+    content: "What privacy features does NEAR offer?",
   },
   {
-    content: "How do I participate in Cardano governance voting?",
+    content: "How can I deploy a Shade Agent?",
   },
   {
-    content: "What privacy features does Midnight network offer?",
+    content: "What cross-chain capabilities does NEAR provide?",
   },
   {
-    content: "How can I deploy smart contracts on Masumi network?",
+    content: "How do NEAR Intents enable atomic transactions?",
   },
   {
-    content: "What do you think about Cardano's ecosystem growth?",
+    content: "What's the difference between NEAR and other blockchains?",
   },
 ];

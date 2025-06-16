@@ -1,99 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StreamingTextResponse } from 'ai';
 
-// Masumi Network Registry Service
-const MASUMI_REGISTRY_URL = 'http://registry.masumi.network';
-const MASUMI_PAYMENT_URL = 'https://payment.masumi.network'; // Update when available
-
-interface MasumiAgent {
+// NEAR Protocol Agent Interface
+interface NEARAgent {
   id: string;
   name: string;
   description: string;
   baseUrl: string;
   price?: number;
   paymentAddress?: string;
-  inputSchema?: any;
+  capabilities?: string[];
 }
 
-// Fetch live agents from Masumi Registry
-async function fetchMasumiAgents(): Promise<MasumiAgent[]> {
-  try {
-    const response = await fetch(`${MASUMI_REGISTRY_URL}/agents`, {
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
-    
-    if (!response.ok) {
-      console.warn('Masumi Registry not available, using fallback agents');
-      return getFallbackAgents();
-    }
-    
-    const agents = await response.json();
-    return agents.map((agent: any) => ({
-      id: agent.id || agent.agentId,
-      name: agent.name || agent.title,
-      description: agent.description,
-      baseUrl: agent.serviceUrl || agent.endpoint,
-      price: agent.price,
-      paymentAddress: agent.paymentAddress,
-      inputSchema: agent.inputSchema
-    }));
-  } catch (error) {
-    console.error('Error fetching Masumi agents:', error);
-    return getFallbackAgents();
-  }
-}
-
-// Fallback agents for testing
-// Add to existing file
-function getFallbackAgents(): MasumiAgent[] {
+// Fallback NEAR agents for testing
+function getFallbackAgents(): NEARAgent[] {
   return [
-    {
-      id: 'cardano-expert',
-      name: 'Cardano Expert',
-      baseUrl: 'https://cardano-agent.example.com',
-      description: 'Specialized in Cardano blockchain operations and ADA transactions'
-    },
-    {
-      id: 'defi-analyst', 
-      name: 'DeFi Analyst',
-      baseUrl: 'https://defi-agent.example.com',
-      description: 'Expert in decentralized finance protocols and yield farming'
-    },
-    {
-      id: 'midnight-specialist',
-      name: 'Midnight Specialist', 
-      baseUrl: 'https://midnight-agent.example.com',
-      description: 'Privacy-focused blockchain solutions and zero-knowledge proofs'
-    },
     {
       id: 'near-defi-agent',
       name: 'NEAR DeFi Agent',
       baseUrl: 'https://near-defi-agent.shade.network',
-      description: 'Specialized in NEAR Protocol DeFi operations and cross-chain transactions'
+      description: 'Specialized in NEAR Protocol DeFi operations and cross-chain transactions',
+      capabilities: ['defi', 'staking', 'yield-farming']
     },
     {
       id: 'shade-agent-coordinator',
       name: 'Shade Agent Coordinator',
       baseUrl: 'https://coordinator.shade.network',
-      description: 'Coordinates multiple Shade Agents for complex multi-chain operations'
+      description: 'Coordinates multiple Shade Agents for complex multi-chain operations',
+      capabilities: ['coordination', 'multi-chain', 'orchestration']
     },
     {
       id: 'chain-signature-agent',
       name: 'Chain Signature Agent',
       baseUrl: 'https://chain-sig.shade.network',
-      description: 'Handles cross-chain transactions using NEAR Chain Signatures'
+      description: 'Handles cross-chain transactions using NEAR Chain Signatures',
+      capabilities: ['cross-chain', 'signatures', 'bitcoin', 'ethereum']
+    },
+    {
+      id: 'near-intents-agent',
+      name: 'NEAR Intents Agent',
+      baseUrl: 'https://intents.shade.network',
+      description: 'Processes user intents and executes atomic transactions',
+      capabilities: ['intents', 'atomic-swaps', 'p2p-trading']
     }
   ];
 }
 
-// Call Masumi-compliant agent
-async function callMasumiAgent(agent: MasumiAgent, messages: any[]): Promise<any> {
+// Call NEAR-compatible agent
+async function callNEARAgent(agent: NEARAgent, messages: any[]): Promise<any> {
   try {
-    // Check agent availability with proper timeout and error handling
+    // Check agent availability
     const availabilityResponse = await fetch(`${agent.baseUrl}/availability`, {
-      signal: AbortSignal.timeout(3000), // 3 second timeout
+      signal: AbortSignal.timeout(3000),
       headers: {
         'Accept': 'application/json',
       }
@@ -108,169 +66,120 @@ async function callMasumiAgent(agent: MasumiAgent, messages: any[]): Promise<any
       throw new Error(`Agent ${agent.name} status: ${availability.status}`);
     }
 
-    // Get input schema with timeout
-    const schemaResponse = await fetch(`${agent.baseUrl}/input_schema`, {
-      signal: AbortSignal.timeout(3000)
-    });
-    const schema = await schemaResponse.json();
-
-    // Prepare input data according to Masumi API standard
+    // Prepare input data for NEAR agent
     const lastMessage = messages[messages.length - 1];
-    const inputData = [
-      { key: 'text', value: lastMessage.content },
-      { key: 'context', value: JSON.stringify(messages.slice(-3)) },
-      { key: 'agent_type', value: agent.id },
-      { key: 'timestamp', value: new Date().toISOString() }
-    ];
+    const inputData = {
+      message: lastMessage.content,
+      context: messages.slice(-3),
+      agent_type: agent.id,
+      timestamp: new Date().toISOString(),
+      capabilities: agent.capabilities
+    };
 
-    // Start job with timeout
-    const jobResponse = await fetch(`${agent.baseUrl}/start_job`, {
+    // Call the agent
+    const response = await fetch(`${agent.baseUrl}/process`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input_data: inputData }),
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      body: JSON.stringify(inputData),
+      signal: AbortSignal.timeout(10000)
     });
 
-    if (!jobResponse.ok) {
-      throw new Error(`Job start failed: ${jobResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`Agent call failed: ${response.status}`);
     }
 
-    const jobResult = await jobResponse.json();
-    const { job_id, payment_id } = jobResult;
-
-    // Poll for job completion (Masumi API standard)
-    let status = 'pending';
-    let result = '';
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (status !== 'completed' && status !== 'failed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const statusResponse = await fetch(`${agent.baseUrl}/status?job_id=${job_id}`);
-      const statusResult = await statusResponse.json();
-      
-      status = statusResult.status;
-      result = statusResult.result || '';
-      attempts++;
-    }
-
-    if (status === 'completed') {
-      return {
-        success: true,
-        result,
-        agent: agent.name,
-        job_id,
-        payment_id,
-        network: 'Masumi'
-      };
-    } else {
-      throw new Error(`Job ${status}. Last result: ${result}`);
-    }
-
+    const result = await response.json();
+    
+    return {
+      success: true,
+      result: result.response || result.message,
+      agent: agent.name,
+      network: 'NEAR Protocol'
+    };
   } catch (error) {
-    console.error(`Masumi agent ${agent.name} error:`, error);
-    // Return a more specific error for network issues
-    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-      return {
-        success: false,
-        error: `Agent ${agent.name} is unreachable (timeout)`,
-        agent: agent.name
-      };
-    }
+    console.error(`NEAR agent ${agent.name} error:`, error);
     return {
       success: false,
-      error: error.message || 'Unknown error',
+      error: error instanceof Error ? error.message : 'Unknown error',
       agent: agent.name
     };
   }
 }
 
-// Fallback to existing Solana API
-async function callSolanaAPI(messages: any[], selectedModel: string) {
-  try {
-    const response = await fetch('https://solanaaihackathon.onrender.com/api/v1/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages,
-        model: selectedModel || 'gpt-3.5-turbo'
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Solana API error: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Solana API error:', error);
-    throw error;
-  }
-}
-
-// Select appropriate agent based on message content
-function selectAgent(message: string, agents: MasumiAgent[]): MasumiAgent | null {
+function selectAgent(message: string, agents: NEARAgent[]): NEARAgent | null {
   const lowerMessage = message.toLowerCase();
   
-  // Agent selection logic
-  if (lowerMessage.includes('cardano') || lowerMessage.includes('ada') || lowerMessage.includes('stake')) {
-    return agents.find(a => a.id === 'cardano-expert') || null;
+  // Intent-based agent selection
+  if (lowerMessage.includes('defi') || lowerMessage.includes('stake') || lowerMessage.includes('yield')) {
+    return agents.find(a => a.id === 'near-defi-agent') || null;
   }
   
-  if (lowerMessage.includes('defi') || lowerMessage.includes('yield') || lowerMessage.includes('liquidity')) {
-    return agents.find(a => a.id === 'defi-analyst') || null;
+  if (lowerMessage.includes('cross-chain') || lowerMessage.includes('bitcoin') || lowerMessage.includes('ethereum')) {
+    return agents.find(a => a.id === 'chain-signature-agent') || null;
   }
   
-  if (lowerMessage.includes('privacy') || lowerMessage.includes('midnight') || lowerMessage.includes('zero-knowledge')) {
-    return agents.find(a => a.id === 'midnight-specialist') || null;
+  if (lowerMessage.includes('intent') || lowerMessage.includes('swap') || lowerMessage.includes('trade')) {
+    return agents.find(a => a.id === 'near-intents-agent') || null;
   }
   
-  // Default to first available agent
-  return agents[0] || null;
+  if (lowerMessage.includes('coordinate') || lowerMessage.includes('complex')) {
+    return agents.find(a => a.id === 'shade-agent-coordinator') || null;
+  }
+  
+  // Default to coordinator for complex queries
+  return agents.find(a => a.id === 'shade-agent-coordinator') || agents[0];
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { messages, selectedModel, chatId, agentId } = body;
-
-    console.log('Chat API called with:', { 
-      messagesCount: messages?.length, 
-      selectedModel, 
-      chatId, 
-      agentId 
-    });
-
-    // Always use Solana API for now until real Masumi agents are available
-    console.log('Using Solana API (Masumi agents not yet available)');
-    const response = await callSolanaAPI(messages, selectedModel);
-
-    // Create streaming response
-    const stream = new ReadableStream({
-      start(controller) {
-        const content = response.choices?.[0]?.message?.content || 'Sorry, I could not process your request.';
-        
-        const finalContent = `*[Powered by Telegram-Bitte]*\n\n${content}`;
-        controller.enqueue(new TextEncoder().encode(finalContent));
-        controller.close();
-      }
-    });
-
-    return new StreamingTextResponse(stream);
+    const { messages, selectedModel, chatId, agentId } = await req.json();
     
+    // Get available NEAR agents
+    const agents = getFallbackAgents();
+    
+    // Select appropriate agent based on the message
+    const lastMessage = messages[messages.length - 1];
+    const selectedAgent = selectAgent(lastMessage.content, agents);
+    
+    if (!selectedAgent) {
+      return NextResponse.json({ error: 'No suitable agent found' }, { status: 400 });
+    }
+    
+    // Try to call the NEAR agent
+    const agentResult = await callNEARAgent(selectedAgent, messages);
+    
+    if (agentResult.success) {
+      const footerMessage = "\n\n---\n*Powered by Telegram-Bitte - NEAR Protocol, Shade Agents & Chain Signatures*";
+      
+      return NextResponse.json({
+        response: agentResult.result + footerMessage,
+        agent: agentResult.agent,
+        network: agentResult.network
+      });
+    } else {
+      // Fallback to simple response
+      const fallbackResponse = `I'm a NEAR Protocol assistant powered by Shade Agents. I can help you with:\n\n` +
+        `• DeFi operations on NEAR\n` +
+        `• Cross-chain transactions using Chain Signatures\n` +
+        `• NEAR Intents for atomic swaps\n` +
+        `• Multi-chain coordination\n\n` +
+        `How can I assist you today?`;
+      
+      const footerMessage = "\n\n---\n*Powered by Telegram-Bitte - NEAR Protocol, Shade Agents & Chain Signatures*";
+      
+      return NextResponse.json({
+        response: fallbackResponse + footerMessage,
+        agent: 'Telegram-Bitte Assistant',
+        network: 'NEAR Protocol'
+      });
+    }
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
-
-// Update the footer message
-const footerMessage = "\n\n---\n*Powered by Telegram-Bitte - NEAR Protocol, Shade Agents & Chain Signatures*";
